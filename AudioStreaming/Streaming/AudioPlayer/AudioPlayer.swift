@@ -301,7 +301,7 @@ open class AudioPlayer {
 
     /// Resumes the audio playback, if previous paused
     public func resume() {
-        guard playerContext.internalState == .paused else { return }
+        guard playerContext.internalState == .paused || playerContext.internalState == .waitingForDataAfterSeek else { return }
         playerContext.setInternalState(to: stateBeforePaused)
         serializationQueue.sync {
             do {
@@ -553,7 +553,7 @@ open class AudioPlayer {
     private func processSource() {
         dispatchPrecondition(condition: .onQueue(sourceQueue))
 
-        guard playerContext.internalState != .paused else { return }
+//        guard playerContext.internalState != .paused else { return }
 
         if playerContext.internalState == .pendingNext {
             let entry = entriesQueue.dequeue(type: .upcoming)
@@ -571,8 +571,9 @@ open class AudioPlayer {
                 readingEntry.close()
             }
             if configuration.flushQueueOnSeek {
+                let playerState = playerContext.state.value
                 playerContext.setInternalState(to: .waitingForDataAfterSeek)
-                setCurrentReading(entry: playingEntry, startPlaying: true, shouldClearQueue: true)
+                setCurrentReading(entry: playingEntry, startPlaying: playerState == .paused ? false : true, shouldClearQueue: true)
             } else {
                 entriesQueue.requeueBufferingEntries { audioEntry in
                     audioEntry.reset()

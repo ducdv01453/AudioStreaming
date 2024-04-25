@@ -31,13 +31,15 @@ extension AudioPlayer {
 /// - Parameter internalState: A value of `InternalState`
 /// - Returns: A tuple of `(AudioPlayerState, AudioPlayerStopReason)`
 func playerStateAndStopReason(
-    for internalState: AudioPlayer.InternalState
+    for internalState: AudioPlayer.InternalState, previousState: AudioPlayerState
 ) -> (state: AudioPlayerState, stopReason: AudioPlayerStopReason?) {
     switch internalState {
     case .initial:
         return (.ready, AudioPlayerStopReason.none)
-    case .running, .playing, .waitingForDataAfterSeek:
+    case .running, .playing:
         return (.playing, AudioPlayerStopReason.none)
+    case .waitingForDataAfterSeek:
+        return (previousState == .paused ? .paused : .playing, AudioPlayerStopReason.none)
     case .pendingNext, .rebuffering, .waitingForData:
         return (.bufferring, AudioPlayerStopReason.none)
     case .stopped:
