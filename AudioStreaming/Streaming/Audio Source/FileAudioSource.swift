@@ -55,16 +55,13 @@ final class FileAudioSource: NSObject, CoreAudioStreamSource {
     }
 
     // no-op
-    func suspend() {
-        close()
-    }
+    func suspend() {}
 
     func resume() {
-        do {
-            try open()
-        } catch {
-            delegate?.errorOccurred(source: self, error: error)
+        guard let inputStream = inputStream else {
+            return
         }
+        CFReadStreamSetDispatchQueue(inputStream, underlyingQueue)
     }
 
     func seek(at offset: Int) {
